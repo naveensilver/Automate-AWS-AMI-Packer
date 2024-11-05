@@ -355,7 +355,11 @@ By following these steps, you have automated the process of creating an AWS AMI 
 - Integrating Packer into a CI/CD pipeline (GitHub Actions)
 - Tagging and managing AMIs
 
-With this setup
+With this setup, every time you push code to your repository, GitHub Actions will automatically create a new AMI. This ensures your infrastructure is always up to date and ready for deployment.
 
-, every time you push code to your repository, GitHub Actions will automatically create a new AMI. This ensures your infrastructure is always up to date and ready for deployment.
+## Output:
+
+![Screenshot 2024-11-06 001935](https://github.com/user-attachments/assets/9a20f360-4141-4911-867c-1184fe322c36)
+
+![Screenshot 2024-11-06 001838](https://github.com/user-attachments/assets/1eee5c91-d30b-4c7c-a45c-2b691b122ba5)
 
