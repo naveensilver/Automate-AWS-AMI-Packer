@@ -1,0 +1,31 @@
+name: Build AWS AMI with Packer
+
+on:
+  push:
+    branches:
+      - main  # Trigger on push to the main branch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: 'us-east-1'
+
+    - name: Install Packer
+      run: |
+        curl -LO https://releases.hashicorp.com/packer/1.8.3/packer_1.8.3_linux_amd64.zip
+        unzip packer_1.8.3_linux_amd64.zip
+        sudo mv packer /usr/local/bin/
+
+    - name: Run Packer build
+      run: |
+        packer build packer-template.hcl
