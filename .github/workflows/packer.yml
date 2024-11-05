@@ -28,4 +28,4 @@ jobs:
 
     - name: Run Packer build
       run: |
-        packer build packer-template.hcl
+        packer build packer-template.pkr.hcl
