@@ -1,0 +1,48 @@
+name: Build AWS AMI with Packer
+
+on:
+  push:
+    branches:
+      - main  # Trigger on push to the main branch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: 'us-east-1'
+
+    - name: Install Packer
+      run: |
+        curl -LO https://releases.hashicorp.com/packer/1.8.3/packer_1.8.3_linux_amd64.zip
+        unzip packer_1.8.3_linux_amd64.zip
+        sudo mv packer /usr/local/bin/
+
+    - name: Run Packer build
+      id: packer
+      run: |
+        # Run Packer build command and capture the AMI ID from the output
+        AMI_ID=$(packer build -machine-readable packer-template.pkr.hcl | tee /dev/tty | grep 'artifact,0,id' | sed 's/.*ami-//')
+        echo "AMI ID is $AMI_ID"
+        echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
+
+    - name: Delete the AMI and associated snapshots
+      if: ${{ env.AMI_ID }}
+      run: |
+        echo "Deregistering AMI ${{ env.AMI_ID }}"
+        aws ec2 deregister-image --image-id ${{ env.AMI_ID }}
+        
+        # Find and delete the associated snapshot
+        SNAPSHOT_ID=$(aws ec2 describe-images --image-ids ${{ env.AMI_ID }} --query 'Images[0].BlockDeviceMappings[0].Ebs.SnapshotId' --output text)
+        if [ "$SNAPSHOT_ID" != "None" ]; then
+          echo "Deleting Snapshot $SNAPSHOT_ID"
+          aws ec2 delete-snapshot --snapshot-id $SNAPSHOT_ID
+        fi
